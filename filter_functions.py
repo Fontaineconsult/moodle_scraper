@@ -3,6 +3,7 @@ import regexs
 import request_functions as rf
 from bs4 import BeautifulSoup
 
+##! need workaround for servers not configured to return HEAD requests
 
 class InternalResource:
 
@@ -27,10 +28,19 @@ class InternalResource:
             actual_title = gross_title[22:-1].translate(str.maketrans('', '', '?'))
             self.resource_title = actual_title
             self.downloadable = True
+
+            if self.resource_type == 'Other': # in case file name is missing extension
+                self.resource_type = 'file'
+
+
         elif self.moodle_resource:
+            print("This is a moodle resource")
             file_name = self.resource_link.rsplit('/', 1)[-1].encode('utf-8').translate(str.maketrans('', '', '?'))
             self.downloadable = True
             self.resource_title = file_name
+
+            if self.resource_type == 'Other': # in case file name is missing extension
+                self.resource_type = 'file'
         else:
             self.resource_title = "No Name Provided"
 
@@ -123,19 +133,32 @@ def get_section_summary(section_html):
 
 def get_mod_resource_page_link(link):
     mod_url_page_html = rf.get_ilearn_resource(link)
+    print(mod_url_page_html)
     div_main = BeautifulSoup(mod_url_page_html, "lxml").find("div", {"role": "main"})
 
-    secondary_link = div_main.find("a", href=True)
-    if not secondary_link:  # look for iFrame if not 'a' tag
-        iframe_tag = div_main.find("iframe")
-        if iframe_tag:
-            return iframe_tag['src']
+    if div_main is not None:
+        secondary_link = div_main.find("a", href=True)
+
+        if not secondary_link:  # look for iFrame if not 'a' tag
+            iframe_tag = div_main.find("iframe")
+            if iframe_tag:
+                return iframe_tag['src']
+            else:
+                return None
+        if secondary_link:
+            return secondary_link['href']
         else:
             return None
-    if secondary_link:
-        return secondary_link['href']
-    else:
-        return None
+    else:  # if div main doesn't exist, check of content is in a frame, get the frame src.
+
+        div_frame = BeautifulSoup(mod_url_page_html, "lxml").find_all("frame")
+        print(div_frame)
+        if div_main is not None:
+            div_main = div_frame[1]
+            secondary_link = div_main['src']
+            return secondary_link
+        else:
+            return None
 
 def get_assign_resource_page_link(link):
     mod_url_page_html = rf.get_ilearn_resource(link)
@@ -153,14 +176,20 @@ def get_assign_resource_page_link(link):
     else:
         return None
 
+
+
+
+
 def get_header(link):
+    allowed_codes = [200, 300, 301, 302, 303]
     if link is not None:
         header = rf.get_resources_header(link)
-
-        if header.status_code is not "404":
-            return header
+        if header is not None:
+            if header.status_code in allowed_codes:
+                return header
+            else:
+                return None
         else:
-            print("404")
             return None
     else:
         return None
@@ -170,6 +199,7 @@ def initial_resource_search(header, link):
         if header.status_code == 303 or header.status_code == 302 or header.status_code == 301:
 
             header_resource = header.headers['Location']
+            print("LINK IN HEADER", header_resource, link)
             link_type = regexs.identify_link(header_resource)
             return header_resource, header.status_code, link_type
 
@@ -183,7 +213,6 @@ def sort_main_body_links(section_links):
     resource_objects = []
 
     sorted_resources = master_link_sorter(section_links)
-
     for resource_link in sorted_resources:
         resource_objects.append(IlearnResource(resource_link))
 
@@ -193,7 +222,9 @@ def master_link_sorter(section_links):
 
     section_id = section_links[0]
     section_links = section_links[1]
+
     scrubbed_links = [x for x in section_links if not regexs.links_to_remove.match(x)]
+
     working_list = [x for x in scrubbed_links]
     raw_resource_links = []
 
@@ -201,10 +232,9 @@ def master_link_sorter(section_links):
         for link in working_list:
 
             search = initial_resource_search(get_header(link), link)
-
+            print(search)
             if search is not None:
                 if search[2] == 'file':
-
                     working_list.remove(link)
                     raw_resource_links.append(search[0])
                 elif search[2] == 'url':
@@ -224,12 +254,31 @@ def master_link_sorter(section_links):
                     new_link = get_assign_resource_page_link(link)
                     if new_link is not None:
                         working_list.append(new_link)
+
                 elif search[2] == 'resource':
+
+                    if search[1] == 200:
+                        new_link = get_mod_resource_page_link(search[0])
+                        working_list.remove(link)
+                        working_list.append(new_link)
+                    else:
+
+                        working_list.remove(link)
+                        working_list.append(search[0])
+
+
+
+
+                elif search[2] == 'page':
+                    ##! make sure page search works
                     working_list.remove(link)
-                    working_list.append(search[0])
-                else:
+
+                elif search[2] is None:
                     working_list.remove(link)
-                    raw_resource_links.append(link)
+                    raw_resource_links.append(search[0])
+            else:
+                ##! need better way to short bad headers
+                working_list.remove(link)
 
 
     return raw_resource_links

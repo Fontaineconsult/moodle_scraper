@@ -2,6 +2,7 @@ import filter_functions as ifilter
 from bs4 import BeautifulSoup
 from request_functions import get_ilearn_page
 
+
 ##! Need a way to not get hidden resources
 class _IlearnCourseSection:
 
@@ -17,7 +18,6 @@ class IlearnCoursePage:
 
     def __init__(self, page_id):
         self.page_id = page_id
-
         self.raw_course_page_html = get_ilearn_page(self.page_id)
         self.parsed_html = BeautifulSoup(self.raw_course_page_html, "html.parser")
         self.course_sections = [_IlearnCourseSection(content[0], content[1]) for content
@@ -32,7 +32,6 @@ class IlearnCoursePage:
             for resource in section.section_resources:
                 links_to_return.append(resource.resource_link)
         return links_to_return
-
 
     def get_sections(self):
         sections_to_return = []
@@ -73,5 +72,3 @@ class IlearnCoursePage:
 
     def __len__(self):
         return len(self.course_sections)
-
-iLearn_page = IlearnCoursePage("16938")

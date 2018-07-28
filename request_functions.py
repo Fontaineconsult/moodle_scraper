@@ -1,21 +1,18 @@
 import requests
 import requests.exceptions
 import urllib3
-import shutil
+import traceback
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-
+url = 'https://ay1718.ilearn.support.at.sfsu.edu/local/hub/extlogin.php?wantsurl=https%3A%2F%2Fay1718.ilearn.support.at.sfsu.edu%2F'
+login_data = dict(username='913678186', password='learning books reading library')
+ilearn_session = requests.session()
+ilearn_session.get(url, verify=False)
+ilearn_session.post(url, data=login_data, headers={"Referer": "https://ay1617.ilearn.support.at.sfsu.edu"})
 
 
 def iLearn_login_session(calling_function):
 ##! how to do persistent session for whole program?
-    url = 'https://ay1718.ilearn.support.at.sfsu.edu/local/hub/extlogin.php?wantsurl=https%3A%2F%2Fay1718.ilearn.support.at.sfsu.edu%2F'
-    login_data = dict(username='913678186', password='learning books reading library')
-
-
-    ilearn_session = requests.session()
-    ilearn_session.get(url, verify=False)
-    ilearn_session.post(url, data=login_data, headers={"Referer": "https://ay1617.ilearn.support.at.sfsu.edu"})
 
     def resource_wrapper(resource_url):
         request_object = calling_function(resource_url, ilearn_session)
@@ -26,11 +23,13 @@ def iLearn_login_session(calling_function):
 
 @iLearn_login_session
 def get_resources_header(resource_url, *session):
+    print(resource_url)
     session = session[0]
     try:
         header = session.head(resource_url)
         return header
     except:
+        traceback.print_exc()
         return None
 
 

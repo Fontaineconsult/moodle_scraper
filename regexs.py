@@ -2,7 +2,7 @@ import re
 import dis
 ##! /mod/resource can also be a direct link. Need to inspect reponse headers before directing // 303 see other
 
-moodle_content_id_regex = "https://ay1718.ilearn.support.at.sfsu.edu/mod/(((url|presidioresource|mediasite)|(page)|(assign)|(folder)|(resource))/view.php\?id=[0-9]{0,7})|(.*.pdf|.*.docx|.*.ppt|.*.doc|.*.pptx)"
+moodle_content_id_regex = "https://ay1718.ilearn.support.at.sfsu.edu/mod/(((url|presidioresource|mediasite)|(page)|(assign)|(folder)|(resource))/view.php\?id=[0-9]{0,7})|(.*\.pdf|.*\.docx|.*\.ppt|.*\.doc|.*\.pptx|.*\.jpg|.*\.rtf|.*\.m4a|.*\.pages|.*\.rar|.*\.xlsx|.*\.zip)"
 
 first_level_group = "((.*.pdf|.*.docx|.*.ppt)|" \
               "(resource/view.php\?id=[0-9]{0,7}))" \
@@ -37,10 +37,12 @@ links_to_remove = re.compile("(https://ay1718.ilearn.support.at.sfsu.edu/mod/)("
                              "(attendance/.+)|"
                              "(forum/.+)|"
                              "(quiz/.+))|"
+                             "(zoom/:.+)|"
                              "(mailto:.+)|"
                              "(https://email.sfsu.edu/owa/.+)|"
                              "(https://ay1718.ilearn.support.at.sfsu.edu/course/view.php\?id=\d{0,7}#section-\d+)|"
-                             "(https://ay1718.ilearn.support.at.sfsu.edu/course/view.php?id=[0-9]{0,7})")
+                             "(https://ay1718.ilearn.support.at.sfsu.edu/course/view.php?id=[0-9]{0,7})|"
+                             "(\A#{1}.+)")
 
 
 # e_reserve_link = re.compile()
@@ -50,10 +52,10 @@ first_level_mediasite_links = re.compile("https://ay1718.ilearn.support.at.sfsu.
 
 url_id = re.compile("[0-9]{5,7}")
 
-resource_type = re.compile("(.*..*.youtu[\.]?be.*..*.|.*.vimeo.*.|.*.mediasite.*.|.*.dailymotion.*.)|(.*.pdf|.*.docx|.*.ppt|.*.doc|.*.pptx)")
+resource_type = re.compile("(.*..*.youtu[\.]?be.*..*.|.*.vimeo.*.|.*.mediasite.*.|.*.dailymotion.*.)|(.*\.pdf|.*\.docx|.*\.ppt|.*\.doc|.*\.pptx|.*\.jpg|.*\.rtf|.*\.m4a|.*\.pages|.*\.rar|.*\.xlsx|.*\.zip)", re.IGNORECASE)
 
 
-is_moodle_file = re.compile(".*.mod_resource|.*.mod_folder(.*.pdf|.*.docx|.*.ppt|.*.doc|.*.pptx)")
+is_moodle_file = re.compile(".*.mod_resource|.*.mod_folder", re.IGNORECASE)
 
 get_folder_id = re.compile("[0-9]{5,6}/mod_folder/")
 
@@ -84,7 +86,7 @@ def identify_if_moodle(link):
         return False
 
 def identify_link(link):
-    group_regex = re.compile(moodle_content_id_regex)
+    group_regex = re.compile(moodle_content_id_regex, re.IGNORECASE)
     group = group_regex.match(link)
 
 
