@@ -2,6 +2,7 @@ from moodle_core_objects import IlearnCoursePage
 import os
 import win32com.client
 from database import check_or_commit_course, check_or_commit_resource
+import download_reporter as dr
 
 def download_all_page_content(iLearn_Page_id, save_location):
     iLearn_page = IlearnCoursePage(iLearn_Page_id)
@@ -50,7 +51,17 @@ def iLearn_file_downloader(iLearn_Page_id, save_location):
 
     iLearn_page = IlearnCoursePage(iLearn_Page_id)
 
-    save_folder = save_location + iLearn_page.course_name + " - iLearn Content/"
+    dr.set_current_course_log(iLearn_Page_id, iLearn_page.course_name)
+
+
+    ilearn_course_name = iLearn_page.course_name
+    split_ilearn_name = ilearn_course_name.split()
+    formatted_name = "{}{}".format(split_ilearn_name[0], split_ilearn_name[1]).replace("-","")
+
+    if not os.path.exists(formatted_name):
+        os.mkdir(formatted_name)
+
+    save_folder = save_location + formatted_name + "/" + ilearn_course_name + " - iLearn Content/"
 
     if not os.path.exists(save_folder):
         os.mkdir(save_folder)
@@ -59,7 +70,6 @@ def iLearn_file_downloader(iLearn_Page_id, save_location):
 
     staged_resources = iLearn_page.get_staged_content()
 
-    print(staged_resources)
 
     for section in staged_resources:
 
@@ -70,15 +80,16 @@ def iLearn_file_downloader(iLearn_Page_id, save_location):
                 os.mkdir(section_dir)
 
             for item in section['resources']:
+
                 if check_or_commit_resource(item.resource_title,
                                             item.resource_link,
                                             item.resource_type,
                                             iLearn_Page_id):
-
-                    print("already exists")
+                    dr.log_resource_exists(item)
                 else:
+
                     resource_get = item()
-                    print(resource_get)
+
                     section_dir_local = section_dir
 
                     folder = None
@@ -120,6 +131,9 @@ def iLearn_file_downloader(iLearn_Page_id, save_location):
                         item_url = resource_get['resource']
                         create_url_shortcut(item_url, video_dir)
 
+                    dr.log_file_download(item)
+
+    dr.build_report()
 
 def create_url_shortcut(url, save_directory):
     fixed_url = url.replace('/', '_')\

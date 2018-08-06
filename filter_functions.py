@@ -7,11 +7,11 @@ from bs4 import BeautifulSoup
 
 class InternalResource:
 
-    def __init__(self, link):
+    def __init__(self, link, header):
         self.resource_link = link
         self.file_type = None
         self.resource_type = regexs.identify_resource_type(self.resource_link)
-        self.resource_header = rf.get_resources_header(link)
+        self.resource_header = header
         self.resource_title = None
         self.downloadable = False
         self.moodle_resource = regexs.identify_if_moodle(self.resource_link)
@@ -52,8 +52,8 @@ class InternalResource:
 
 class IlearnResource(InternalResource):
 
-    def __init__(self, link):
-        InternalResource.__init__(self, link)
+    def __init__(self, link, header):
+        InternalResource.__init__(self, link, header)
 
     def __call__(self, *args, **kwargs):
 
@@ -133,12 +133,9 @@ def get_section_summary(section_html):
 
 def get_mod_resource_page_link(link):
     mod_url_page_html = rf.get_ilearn_resource(link)
-    print(mod_url_page_html)
     div_main = BeautifulSoup(mod_url_page_html, "lxml").find("div", {"role": "main"})
-
     if div_main is not None:
         secondary_link = div_main.find("a", href=True)
-
         if not secondary_link:  # look for iFrame if not 'a' tag
             iframe_tag = div_main.find("iframe")
             if iframe_tag:
@@ -150,15 +147,19 @@ def get_mod_resource_page_link(link):
         else:
             return None
     else:  # if div main doesn't exist, check of content is in a frame, get the frame src.
-
         div_frame = BeautifulSoup(mod_url_page_html, "lxml").find_all("frame")
-        print(div_frame)
         if div_main is not None:
             div_main = div_frame[1]
             secondary_link = div_main['src']
             return secondary_link
         else:
             return None
+
+
+def get_iframe_video(link):
+    iframe_video_resource = rf.get_ilearn_page(link)
+    presidio_container = BeautifulSoup(iframe_video_resource, 'lxml').find("div", {"class": "presidio-container"})
+
 
 def get_assign_resource_page_link(link):
     mod_url_page_html = rf.get_ilearn_resource(link)
@@ -168,6 +169,7 @@ def get_assign_resource_page_link(link):
     if not secondary_link:  # look for iFrame if not 'a' tag
         iframe_tag = div_main.find("iframe")
         if iframe_tag:
+            print("IFRAME TAG 2", iframe_tag['src'] )
             return iframe_tag['src']
         else:
             return None
@@ -199,9 +201,13 @@ def initial_resource_search(header, link):
         if header.status_code == 303 or header.status_code == 302 or header.status_code == 301:
 
             header_resource = header.headers['Location']
-            print("LINK IN HEADER", header_resource, link)
-            link_type = regexs.identify_link(header_resource)
-            return header_resource, header.status_code, link_type
+
+            if regexs.check_valid_url(header_resource):
+                print("LINK IN HEADER", header_resource, link)
+                link_type = regexs.identify_link(header_resource)
+                return header_resource, header.status_code, link_type
+            else:
+                return None ##! log this
 
         elif header.status_code == 200:
             link_type = regexs.identify_link(link)
@@ -214,7 +220,13 @@ def sort_main_body_links(section_links):
 
     sorted_resources = master_link_sorter(section_links)
     for resource_link in sorted_resources:
-        resource_objects.append(IlearnResource(resource_link))
+        resources_header = rf.get_resources_header(resource_link)
+        if resources_header is not None:
+            new_ilearn_resource = IlearnResource(resource_link, resources_header)
+            resource_objects.append(new_ilearn_resource)
+        else:
+            print("Error getting resources header before creating resource class")
+            continue
 
     return resource_objects
 
@@ -230,56 +242,67 @@ def master_link_sorter(section_links):
 
     while len(working_list) > 0:
         for link in working_list:
+            print("LINKKKK", link)
 
-            search = initial_resource_search(get_header(link), link)
-            print(search)
-            if search is not None:
-                if search[2] == 'file':
-                    working_list.remove(link)
-                    raw_resource_links.append(search[0])
-                elif search[2] == 'url':
-                    working_list.remove(link)
-                    new_link = get_mod_resource_page_link(search[0])
-                    if new_link is not None:
-                        working_list.append(new_link)
-                elif search[2] == 'folder':
-                    working_list.remove(link)
-                    folder_links = get_folder_links(search[0])
-                    if len(folder_links) > 0:
-                        for link in folder_links:
-                            if link is not None:
-                                working_list.append(link)
-                elif search[2] == 'assignment':
-                    working_list.remove(link)
-                    new_link = get_assign_resource_page_link(link)
-                    if new_link is not None:
-                        working_list.append(new_link)
-
-                elif search[2] == 'resource':
-
-                    if search[1] == 200:
-                        new_link = get_mod_resource_page_link(search[0])
-                        working_list.remove(link)
-                        working_list.append(new_link)
-                    else:
-
-                        working_list.remove(link)
-                        working_list.append(search[0])
-
-
-
-
-                elif search[2] == 'page':
-                    ##! make sure page search works
-                    working_list.remove(link)
-
-                elif search[2] is None:
-                    working_list.remove(link)
-                    raw_resource_links.append(search[0])
-            else:
-                ##! need better way to short bad headers
+            if link is not None and regexs.do_not_head(link): # removes troublesome links that we know we still want
+                print("REMOVING FROM QUEUE", link)
                 working_list.remove(link)
+                # raw_resource_links.append(link) ##! find a way to store these links elsewhere
+                continue
 
+            if regexs.check_valid_url(link):
+                search = initial_resource_search(get_header(link), link)
+                print(search)
+                if search is not None:
+
+                    if search[2] == 'file':
+                        working_list.remove(link)
+                        raw_resource_links.append(search[0])
+
+                    elif search[2] == 'url':
+                        working_list.remove(link)
+                        new_link = get_mod_resource_page_link(search[0])
+                        if new_link is not None:
+                            print('NEW LINK FROM MOD PAGE', new_link)
+                            working_list.append(new_link)
+
+                    elif search[2] == 'folder':
+                        working_list.remove(link)
+                        folder_links = get_folder_links(search[0])
+                        if len(folder_links) > 0:
+                            for link in folder_links:
+                                if link is not None:
+                                    working_list.append(link)
+
+                    elif search[2] == 'assignment':
+                        working_list.remove(link)
+                        new_link = get_assign_resource_page_link(link)
+                        if new_link is not None:
+                            working_list.append(new_link)
+
+                    elif search[2] == 'resource':
+
+                        if search[1] == 200:
+                            new_link = get_mod_resource_page_link(search[0])
+                            working_list.remove(link)
+                            working_list.append(new_link)
+                        else:
+
+                            working_list.remove(link)
+                            working_list.append(search[0])
+
+                    elif search[2] == 'page':
+                        ##! make sure page search works
+                        working_list.remove(link)
+
+                    elif search[2] is None:
+                        working_list.remove(link)
+                        raw_resource_links.append(search[0])
+                else:
+                    ##! need better way to short bad headers
+                    working_list.remove(link)
+            else:
+                working_list.remove(link) # removes invalid URLs
 
     return raw_resource_links
 

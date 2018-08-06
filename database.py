@@ -101,3 +101,12 @@ def flush_all_resources():
     except:
         print("There was a problem. Nothing deleted")
         session.rollback()
+
+def flush_all_courses():
+    try:
+        delete_all = session.query(Course).delete()
+        session.commit()
+        print("All courses deleted")
+    except:
+        print("There was a problem. Nothing deleted")
+        session.rollback()

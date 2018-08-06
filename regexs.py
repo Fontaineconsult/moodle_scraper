@@ -52,12 +52,37 @@ first_level_mediasite_links = re.compile("https://ay1718.ilearn.support.at.sfsu.
 
 url_id = re.compile("[0-9]{5,7}")
 
-resource_type = re.compile("(.*..*.youtu[\.]?be.*..*.|.*.vimeo.*.|.*.mediasite.*.|.*.dailymotion.*.)|(.*\.pdf|.*\.docx|.*\.ppt|.*\.doc|.*\.pptx|.*\.jpg|.*\.rtf|.*\.m4a|.*\.pages|.*\.rar|.*\.xlsx|.*\.zip)", re.IGNORECASE)
+resource_type = re.compile("(.*..*.youtu[\.]?be.*..*.|.*.vimeo.*.|.*.mediasite.*.|.*.dailymotion.*.|.*.presidio.*.)|(.*\.pdf|.*\.docx|.*\.ppt|.*\.doc|.*\.pptx|.*\.jpg|.*\.rtf|.*\.m4a|.*\.pages|.*\.rar|.*\.xlsx|.*\.zip)", re.IGNORECASE)
 
 
 is_moodle_file = re.compile(".*.mod_resource|.*.mod_folder", re.IGNORECASE)
 
 get_folder_id = re.compile("[0-9]{5,6}/mod_folder/")
+
+basic_url_check = re.compile("http.*.|https.*.")
+
+excepted_from_head_check = re.compile("https://presidio.at.sfsu.edu/media/.*.")
+
+
+
+def do_not_head(link):
+    try:
+        if excepted_from_head_check.match(link):
+            return True
+        else:
+            return False
+    except TypeError:
+        return False
+
+def check_valid_url(link):
+
+    try:
+        if basic_url_check.match(link):
+            return True
+        else:
+            return False
+    except TypeError:
+        return False
 
 
 def identify_resource_type(link):
