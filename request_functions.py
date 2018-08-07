@@ -41,13 +41,14 @@ def iLearn_login_session(calling_function):
 
 @iLearn_login_session
 def get_resources_header(resource_url, *session):
-    print("getting header fo this", resource_url)
     session = session[0]
     try:
         header = session.head(resource_url)
-        print(header.text)
         return header
-    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError):
+    except (requests.exceptions.SSLError,
+            requests.exceptions.ConnectionError,
+            urllib3.exceptions.MaxRetryError,
+            urllib3.exceptions.NewConnectionError):
         dr.log_error("HEAD REQUEST: Failed to establish a new connection, Max Retries", resource_url, traceback.format_exc())
         return None
     except:
