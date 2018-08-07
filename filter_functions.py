@@ -34,7 +34,7 @@ class InternalResource:
 
 
         elif self.moodle_resource:
-            print("This is a moodle resource")
+
             file_name = self.resource_link.rsplit('/', 1)[-1].encode('utf-8').translate(str.maketrans('', '', '?'))
             self.downloadable = True
             self.resource_title = file_name
@@ -169,7 +169,6 @@ def get_assign_resource_page_link(link):
     if not secondary_link:  # look for iFrame if not 'a' tag
         iframe_tag = div_main.find("iframe")
         if iframe_tag:
-            print("IFRAME TAG 2", iframe_tag['src'] )
             return iframe_tag['src']
         else:
             return None
@@ -203,7 +202,6 @@ def initial_resource_search(header, link):
             header_resource = header.headers['Location']
 
             if regexs.check_valid_url(header_resource):
-                print("LINK IN HEADER", header_resource, link)
                 link_type = regexs.identify_link(header_resource)
                 return header_resource, header.status_code, link_type
             else:
@@ -242,17 +240,17 @@ def master_link_sorter(section_links):
 
     while len(working_list) > 0:
         for link in working_list:
-            print("LINKKKK", link)
+
 
             if link is not None and regexs.do_not_head(link): # removes troublesome links that we know we still want
-                print("REMOVING FROM QUEUE", link)
+
                 working_list.remove(link)
                 # raw_resource_links.append(link) ##! find a way to store these links elsewhere
                 continue
 
             if regexs.check_valid_url(link):
                 search = initial_resource_search(get_header(link), link)
-                print(search)
+
                 if search is not None:
 
                     if search[2] == 'file':
@@ -263,7 +261,7 @@ def master_link_sorter(section_links):
                         working_list.remove(link)
                         new_link = get_mod_resource_page_link(search[0])
                         if new_link is not None:
-                            print('NEW LINK FROM MOD PAGE', new_link)
+
                             working_list.append(new_link)
 
                     elif search[2] == 'folder':
