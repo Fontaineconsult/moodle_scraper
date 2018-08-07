@@ -14,6 +14,7 @@ class Course(Base):
     course_id = Column(String)
     course_title = Column(String)
     semester = Column(String)
+    course_folder_name = Column(String)
 
 class Resources(Base):
     __tablename__ = 'resources'
@@ -34,15 +35,33 @@ session = DBSession()
 
 
 
+def update_course_folder(course_id, course_name):
+    course = session.query(Course).filter_by(course_id=course_id).first()
+    if course:
+        course.course_folder_name = course_name
+        session.commit()
+    else:
+        return "course not found"
+
+
+
 def get_semester_courses(semester):
-    print(semester)
+
+
     course_query = session.query(Course).filter_by(semester=semester).all()
 
-    return course_query
+    if course_query:
+        return course_query
+    else:
+        return None
 
 
-def add_course(page_id, semester):
-    course = Course(course_id=page_id, semester=semester, course_title='')
+
+def add_course(page_id, semester, course_title):
+    if course_title == '':
+        course_title = ''
+
+    course = Course(course_id=page_id, semester=semester, course_folder_name=course_title)
     session.add(course)
     print("Committing to Courses", course)
     session.commit()
@@ -69,17 +88,18 @@ def check_or_commit_course(page_id, course_name):
 def check_or_commit_resource(name, link, type, course_id):
     check_resource = session.query(Resources).filter_by(resource_link=link, course_id=course_id).first()
     if check_resource:
-        print("already exists")
+
         return True
     else:
-        print("doesn't exist")
+
         commit_resource(name, link, type, course_id)
         return False
 
 
-def commit_course(course_id, course_name):
+def commit_course(course_id, course_name, course_folder_name):
     course = Course(course_id=course_id,
-                    course_title=course_name)
+                    course_title=course_name,
+                    course_folder_name=course_folder_name)
     session.add(course)
     session.commit()
 
