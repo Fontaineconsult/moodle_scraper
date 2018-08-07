@@ -43,6 +43,16 @@ def update_course_folder(course_id, course_name):
     else:
         return "course not found"
 
+def get_single_course(course_id):
+
+    course = session.query(Course).filter_by(course_id=course_id).first()
+    if course:
+        return course
+    else:
+        print("No Course Found For ID: {}".format(course_id))
+        return None
+
+
 
 
 def get_semester_courses(semester):
@@ -54,9 +64,6 @@ def get_semester_courses(semester):
         return course_query
     else:
         return None
-
-
-
 def add_course(page_id, semester, course_title):
     if course_title == '':
         course_title = ''
@@ -65,8 +72,6 @@ def add_course(page_id, semester, course_title):
     session.add(course)
     print("Committing to Courses", course)
     session.commit()
-
-
 def check_or_commit_course(page_id, course_name):
     print(page_id)
     check_course = session.query(Course).filter_by(course_id=page_id).first()
@@ -83,8 +88,6 @@ def check_or_commit_course(page_id, course_name):
     else:
         commit_course(page_id,course_name)
         return False
-
-
 def check_or_commit_resource(name, link, type, course_id):
     check_resource = session.query(Resources).filter_by(resource_link=link, course_id=course_id).first()
     if check_resource:
@@ -94,17 +97,12 @@ def check_or_commit_resource(name, link, type, course_id):
 
         commit_resource(name, link, type, course_id)
         return False
-
-
 def commit_course(course_id, course_name, course_folder_name):
     course = Course(course_id=course_id,
                     course_title=course_name,
                     course_folder_name=course_folder_name)
     session.add(course)
     session.commit()
-
-
-
 def commit_resource(name, link, type, course_id):
     resource = Resources(resource_name=name,
                          resource_link=link,
@@ -112,7 +110,6 @@ def commit_resource(name, link, type, course_id):
                          course_id=course_id)
     session.add(resource)
     session.commit()
-
 def flush_all_resources():
     try:
         delete_all = session.query(Resources).delete()
@@ -121,7 +118,6 @@ def flush_all_resources():
     except:
         print("There was a problem. Nothing deleted")
         session.rollback()
-
 def flush_all_courses():
     try:
         delete_all = session.query(Course).delete()
