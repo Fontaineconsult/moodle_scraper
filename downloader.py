@@ -47,7 +47,7 @@ def download_all_page_content(iLearn_Page_id, save_location):
                     create_url_shortcut(item_url, video_dir)
 
 
-def iLearn_file_downloader(iLearn_Page_id, save_location):
+def iLearn_file_downloader(iLearn_Page_id, save_location, course_folder):
 
     iLearn_page = IlearnCoursePage(iLearn_Page_id)
 
@@ -56,7 +56,11 @@ def iLearn_file_downloader(iLearn_Page_id, save_location):
 
     ilearn_course_name = iLearn_page.course_name
     split_ilearn_name = ilearn_course_name.split()
-    formatted_name = "{}{}".format(split_ilearn_name[0], split_ilearn_name[1]).replace("-","")
+
+    if course_folder == '':
+        formatted_name = "{}{}".format(split_ilearn_name[0], split_ilearn_name[1]).replace("-","")
+    else:
+        formatted_name = course_folder
 
     if not os.path.exists(formatted_name):
         os.mkdir(formatted_name)
@@ -133,7 +137,7 @@ def iLearn_file_downloader(iLearn_Page_id, save_location):
 
                     dr.log_file_download(item)
 
-    dr.build_report()
+
 
 def create_url_shortcut(url, save_directory):
     fixed_url = url.replace('/', '_')\
