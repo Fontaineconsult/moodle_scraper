@@ -2,11 +2,25 @@ from database import get_semester_courses, get_single_course
 from downloader import iLearn_file_downloader
 import os
 import download_reporter as dr
+import yaml, request_functions
+
+master_folder = None
 
 
 
-master_folder = "Z:/Edit Files/semesters/Fall 2018/"
-os.chdir(master_folder)
+def load_save_folder():
+    global master_folder
+    __path__ = os.path.join(os.path.dirname(__file__), "config.yaml").replace('/','//')
+    print(__path__)
+    with open(__path__, 'r') as config:
+        try:
+            config_file = yaml.load(config)
+            master_folder = config_file['save_location']
+            os.chdir(master_folder)
+            return master_folder
+        except:
+            print("Couldn't Load Save Folder Config")
+            return None
 
 def load_course_check_list(semester):
     current_courses = get_semester_courses(semester)
@@ -30,10 +44,10 @@ def main_download_loop(semester):
         course_id = course[0]
         course_folder = course[1]
 
-        iLearn_file_downloader(course_id, master_folder, course_folder)
+        iLearn_file_downloader(course_id, load_save_folder(), course_folder)
 
     dr.build_report()
-
+    return
 
 
 def single_course_download(course_id):
@@ -42,14 +56,12 @@ def single_course_download(course_id):
     course_id = current_course.course_id
     course_folder = current_course.course_folder_name
 
-    iLearn_file_downloader(course_id, master_folder, course_folder)
+    iLearn_file_downloader(course_id, load_save_folder(), course_folder)
 
     dr.build_report()
-
-
-
-
+    return
 
 if __name__ == '__main__':
+    request_functions.open_iLearn_connection()
     main_download_loop("Fall 2018")
     
