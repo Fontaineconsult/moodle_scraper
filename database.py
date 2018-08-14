@@ -68,10 +68,20 @@ def add_course(page_id, semester, course_title):
     if course_title == '':
         course_title = ''
 
-    course = Course(course_id=page_id, semester=semester, course_folder_name=course_title)
-    session.add(course)
-    print("Committing to Courses", course)
-    session.commit()
+    does_it_already_exist = session.query(Course).filter_by(course_id=page_id, semester=semester).first()
+    if does_it_already_exist is None:
+
+        course = Course(course_id=page_id, semester=semester, course_folder_name=course_title)
+        session.add(course)
+        print("Committing to Courses", course)
+        session.commit()
+        return True
+    else:
+        print("Course Already Exists")
+        return False
+
+
+
 def check_or_commit_course(page_id, course_name):
     print(page_id)
     check_course = session.query(Course).filter_by(course_id=page_id).first()
