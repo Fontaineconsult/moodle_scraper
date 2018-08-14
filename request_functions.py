@@ -3,34 +3,62 @@ import requests.exceptions
 import urllib3
 import urllib3.exceptions
 import traceback
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import download_reporter as dr
+import os, yaml
 
 
 
-url = 'https://ay1718.ilearn.support.at.sfsu.edu/local/hub/extlogin.php?wantsurl=https%3A%2F%2Fay1718.ilearn.support.at.sfsu.edu%2F'
-login_data = dict(username='913678186', password='learning books reading library')
+
+def load_config():
+    __path__ = os.path.join(os.path.dirname(__file__), "config.yaml").replace('/','//')
+    print(__path__)
+    with open(__path__, 'r') as config:
+        try:
+            return yaml.load(config)
+        except:
+            print("Error Loading Config File")
+            return None
+
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
 ilearn_session = requests.session()
-ilearn_session.cookies.clear()
 
-try:
-    ilearn_session.get(url)
-    if ilearn_session.cookies.get_dict():
-        ilearn_session.post(url, data=login_data, headers={"Referer": "https://ay1718.ilearn.support.at.sfsu.edu"})
-    else:
+
+base_course_url = load_config()['base_ilearn_course_url']
+
+def open_iLearn_connection():
+    global ilearn_session
+
+    config_file = load_config()
+
+    url = config_file['iLearn_page']
+    referer = {"referer": config_file['referrer_page']}
+    username = config_file['iLearn_login']
+    password = config_file['iLearn_pass']
+    login_data = dict(username=username, password=password)
+    try:
+        ilearn_session.get(url)
+        if ilearn_session.cookies.get_dict():
+            ilearn_session.post(url, data=login_data, headers=referer)
+            return True
+        else:
+            ilearn_session = None
+            print("Couldn't reach {}".format(referer))
+            return False
+
+
+    except:
+        dr.log_error("Couldn't Connect to iLearn", url, traceback.format_exc())
         ilearn_session = None
-        raise Exception("Couldn't reach https://ay1718.ilearn.support.at.sfsu.edu")
-
-
-except:
-    print(traceback.print_exc())
-    ilearn_session = None
+        return False
 
 
 def iLearn_login_session(calling_function):
-##! how to do persistent session for whole program?
+    print(ilearn_session)
     if ilearn_session is not None:
-
+        print(ilearn_session.cookies.get_dict())
         def resource_wrapper(resource_url):
             request_object = calling_function(resource_url, ilearn_session)
             return request_object
@@ -59,7 +87,7 @@ def get_resources_header(resource_url, *session):
 @iLearn_login_session
 def get_ilearn_page(resource_url, *session):
     session = session[0]
-    resource = session.get("https://ay1718.ilearn.support.at.sfsu.edu/course/view.php?id=" + resource_url)
+    resource = session.get(base_course_url + resource_url)
     return resource.content
 
 @iLearn_login_session
