@@ -34,6 +34,13 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 
+def update_course_title(course_id, title):
+    course = session.query(Course).filter_by(course_id=course_id).first()
+    if course:
+        course.course_title = title
+        session.commit()
+
+
 
 def update_course_folder(course_id, course_name):
     course = session.query(Course).filter_by(course_id=course_id).first()
@@ -52,11 +59,7 @@ def get_single_course(course_id):
         print("No Course Found For ID: {}".format(course_id))
         return None
 
-
-
-
 def get_semester_courses(semester):
-
 
     course_query = session.query(Course).filter_by(semester=semester).all()
 
@@ -64,6 +67,7 @@ def get_semester_courses(semester):
         return course_query
     else:
         return None
+
 def add_course(page_id, semester, course_title):
     if course_title == '':
         course_title = ''

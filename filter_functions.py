@@ -2,8 +2,10 @@ import re
 import regexs
 import request_functions as rf
 from bs4 import BeautifulSoup
+import os, yaml
 
 ##! need workaround for servers not configured to return HEAD requests
+
 
 class InternalResource:
 
@@ -85,6 +87,17 @@ class IlearnResource(InternalResource):
                     'file-type': self.file_type})
 
 
+def load_config():
+    __path__ = os.path.join(os.path.dirname(__file__), "config.yaml").replace('/','//')
+    print(__path__)
+    with open(__path__, 'r') as config:
+        try:
+            return yaml.load(config)
+        except:
+            print("Error loading config file")
+            return None
+
+
 def get_folder_links(link):
     folder_html = rf.get_ilearn_resource(link)
     folder_links = []
@@ -95,7 +108,8 @@ def get_folder_links(link):
         folder_links.append(link['href'])
     return folder_links
 
-def filter_fist_level_iframe(page_html):
+
+def filter_first_level_iframe(page_html):
     first_level_iframe_src = []
     first_level_iframes = page_html.find_all("iframe")
 
@@ -104,16 +118,18 @@ def filter_fist_level_iframe(page_html):
             first_level_iframe_src.append(iframe['src'])
     return first_level_iframe_src
 
+
 def get_links(page_html):
     links = []
 
     for link in page_html.find_all('a', href=True):
         links.append(link['href'])
-    first_level_iframe_links = filter_fist_level_iframe(page_html)
+    first_level_iframe_links = filter_first_level_iframe(page_html)
     if first_level_iframe_links:
         for link in first_level_iframe_links:
             links.append(link)
     return links
+
 
 def get_section_content(page_html):
     section_classes = []
@@ -124,12 +140,14 @@ def get_section_content(page_html):
         n = n + 1
     return section_classes
 
+
 def get_section_summary(section_html):
     try:
         section_summary = section_html.find("h3", {"class":"sectionname"}).string
     except AttributeError:
         section_summary = None
     return section_summary
+
 
 def get_mod_resource_page_link(link):
     mod_url_page_html = rf.get_ilearn_resource(link)
@@ -178,9 +196,6 @@ def get_assign_resource_page_link(link):
         return None
 
 
-
-
-
 def get_header(link):
     allowed_codes = [200, 300, 301, 302, 303]
     if link is not None:
@@ -194,6 +209,15 @@ def get_header(link):
             return None
     else:
         return None
+
+
+def construct_ereserves_request_link(ereserves_button_div):
+    inputs = ereserves_button_div.find_all("input")
+    q_param1 = inputs[0]['name'] + '=' + inputs[0]['value'].replace(' ', '+')
+    q_param2 = inputs[1]['name'] + '=' + inputs[1]['value']
+    ereserves_page = load_config()['ereserves_base_url'] + '?' + q_param1 + '&' + q_param2
+    return ereserves_page
+
 
 def initial_resource_search(header, link):
     if header is not None:
@@ -211,12 +235,15 @@ def initial_resource_search(header, link):
             link_type = regexs.identify_link(link)
             return link, header.status_code, link_type
     else:
+        print("header returned as none", header, link)
         return None
 
-def sort_main_body_links(section_links):
+
+def sort_for_content_links(section_links):
     resource_objects = []
 
     sorted_resources = master_link_sorter(section_links)
+
     for resource_link in sorted_resources:
         resources_header = rf.get_resources_header(resource_link)
         if resources_header is not None:
@@ -228,14 +255,16 @@ def sort_main_body_links(section_links):
 
     return resource_objects
 
+
 def master_link_sorter(section_links):
 
-    section_id = section_links[0]
+    section_id = section_links[0] ##! refactor to remove use of section id
     section_links = section_links[1]
-
+    print("SECTION LINKS", section_links)
     scrubbed_links = [x for x in section_links if not regexs.links_to_remove.match(x)]
-
+    print("SCRUBBED", scrubbed_links)
     working_list = [x for x in scrubbed_links]
+    print(working_list)
     raw_resource_links = []
 
     while len(working_list) > 0:
@@ -249,9 +278,11 @@ def master_link_sorter(section_links):
                 continue
 
             if regexs.check_valid_url(link):
+
                 search = initial_resource_search(get_header(link), link)
 
                 if search is not None:
+
 
                     if search[2] == 'file':
                         working_list.remove(link)
@@ -285,7 +316,6 @@ def master_link_sorter(section_links):
                             working_list.remove(link)
                             working_list.append(new_link)
                         else:
-
                             working_list.remove(link)
                             working_list.append(search[0])
 
@@ -293,7 +323,14 @@ def master_link_sorter(section_links):
                         ##! make sure page search works
                         working_list.remove(link)
 
+
+                    elif search[1] in [301, 302, 303]:
+                        working_list.remove(link)
+                        working_list.append(search[0])
+
+
                     elif search[2] is None:
+                        print("SEARCH 2 is NONE", search[2], search[0])
                         working_list.remove(link)
                         raw_resource_links.append(search[0])
                 else:

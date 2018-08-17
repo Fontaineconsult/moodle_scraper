@@ -1,8 +1,6 @@
 import re
-import dis
 ##! /mod/resource can also be a direct link. Need to inspect reponse headers before directing // 303 see other
 
-moodle_content_id_regex = "https://ay1718.ilearn.support.at.sfsu.edu/mod/(((url|presidioresource|mediasite)|(page)|(assign)|(folder)|(resource))/view.php\?id=[0-9]{0,7})|(.*\.pdf|.*\.docx|.*\.ppt|.*\.doc|.*\.pptx|.*\.jpg|.*\.rtf|.*\.m4a|.*\.pages|.*\.rar|.*\.xlsx|.*\.zip)"
 
 first_level_group = "((.*.pdf|.*.docx|.*.ppt)|" \
               "(resource/view.php\?id=[0-9]{0,7}))" \
@@ -46,6 +44,10 @@ links_to_remove = re.compile("(https://ay1718.ilearn.support.at.sfsu.edu/mod/)("
 
 
 # e_reserve_link = re.compile()
+
+
+
+moodle_content_id_regex = "https://ay1718.ilearn.support.at.sfsu.edu/mod/(((url|presidioresource|mediasite)|(page)|(assign)|(folder)|(resource))/view.php\?id=[0-9]{0,7})|(.*\.pdf|.*\.docx|.*\.ppt|.*\.doc|.*\.pptx|.*\.jpg|.*\.rtf|.*\.m4a|.*\.pages|.*\.rar|.*\.xlsx|.*\.zip)|(https://diva.sfsu.edu/bundles/[0-9]{5,8}/download)|"
 
 first_level_mediasite_links = re.compile("https://ay1718.ilearn.support.at.sfsu.edu/mod/mediasite/view.php\?id=.+")
 
@@ -113,8 +115,6 @@ def identify_if_moodle(link):
 def identify_link(link):
     group_regex = re.compile(moodle_content_id_regex, re.IGNORECASE)
     group = group_regex.match(link)
-
-
     if group:
 
         if group.group(3):
@@ -128,6 +128,8 @@ def identify_link(link):
         if group.group(7):
             return "resource"
         if group.group(8):
+            return "file"
+        if group.group(9): # ereserve file link
             return "file"
 
     else:

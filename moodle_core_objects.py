@@ -1,6 +1,6 @@
 import filter_functions as ifilter
 from bs4 import BeautifulSoup
-from request_functions import get_ilearn_page
+from request_functions import get_ilearn_page, get_ereserves_page
 
 
 ##! Need a way to not get hidden resources
@@ -11,7 +11,7 @@ class _IlearnCourseSection:
         self.section_content = section_content
         self.section_summary = ifilter.get_section_summary(section_content)
         self.raw_section_links = (self.section_id, ifilter.get_links(section_content))
-        self.section_resources = ifilter.sort_main_body_links(self.raw_section_links)
+        self.section_resources = ifilter.sort_for_content_links(self.raw_section_links)
         self.suspect_links = []
 
 
@@ -26,6 +26,7 @@ class IlearnCoursePage:
                                 if content]
         self.course_name = self.parsed_html.find('title', text=True).text[8:]
         self.course_heading = self.parsed_html.find('h1', text=True)
+        self.eReserve_files = self.check_eReserves()
 
     def get_all_resource_links(self):
         links_to_return = []
@@ -41,8 +42,22 @@ class IlearnCoursePage:
         return sections_to_return
 
     def get_sect_dict(self):
-        section_dict = dict(zip([x.section_id for x in self.course_sections], [x.section_resources for x in self.course_sections]))
+        section_dict = dict(zip([x.section_id for x in self.course_sections],
+                                [x.section_resources for x in self.course_sections]))
         return section_dict
+
+    def check_eReserves(self):
+        eReserve_block =  self.parsed_html.find('aside', {'data-block': 'ereserves'})
+        if eReserve_block:
+            ereserves_link = ifilter.construct_ereserves_request_link(eReserve_block)
+            ereserves_page = BeautifulSoup(get_ereserves_page(ereserves_link), "html.parser")
+            ereserves_main_content = ereserves_page.find('div', {'role':'main'})
+            ereserves_page_links = ifilter.get_links(ereserves_main_content)
+            ereserve_content = ifilter.sort_for_content_links((None, ereserves_page_links))
+            return ereserve_content
+
+        else:
+            return None
 
     def get_all_content(self):
         return_list = []
@@ -58,6 +73,7 @@ class IlearnCoursePage:
 
     def get_staged_content(self):
         return_list = []
+
         for IlearnCourseSection in self.course_sections:
 
             section = {"section": IlearnCourseSection.section_id, "resources": []}
@@ -68,8 +84,6 @@ class IlearnCoursePage:
             return_list.append(section)
 
         return return_list
-
-
 
     def __len__(self):
         return len(self.course_sections)

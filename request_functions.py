@@ -7,8 +7,6 @@ import download_reporter as dr
 import os, yaml
 
 
-
-
 def load_config():
     __path__ = os.path.join(os.path.dirname(__file__), "config.yaml").replace('/','//')
     print(__path__)
@@ -27,6 +25,8 @@ ilearn_session = requests.session()
 
 
 base_course_url = load_config()['base_ilearn_course_url']
+ereserves_base_url = load_config()['ereserves_base_url']
+
 
 def open_iLearn_connection():
     global ilearn_session
@@ -89,6 +89,14 @@ def get_ilearn_page(resource_url, *session):
     session = session[0]
     resource = session.get(base_course_url + resource_url)
     return resource.content
+
+@iLearn_login_session
+def get_ereserves_page(resource_url, *session):
+    session = session[0]
+    resource = session.get(resource_url)
+    return resource.content
+
+
 
 @iLearn_login_session
 def get_ilearn_resource(resource_url, *session):
