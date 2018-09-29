@@ -5,6 +5,8 @@ import traceback
 from database import check_or_commit_course, check_or_commit_resource
 import download_reporter as dr
 
+##! missing ereserves download code
+
 def download_all_page_content(iLearn_Page_id, save_location):
     iLearn_page = IlearnCoursePage(iLearn_Page_id)
     course_content = iLearn_page.get_all_content()
@@ -83,7 +85,8 @@ def iLearn_file_downloader(passed_in_ilearn_page, save_location, course_folder):
 
     if iLearn_page.eReserve_files:
 
-        ereserves_folder = os.path.join(save_folder, "ereserves")
+        ereserves_folder = os.path.join(save_folder, "eReserves")
+
         if not os.path.exists(ereserves_folder):
             os.mkdir(ereserves_folder)
 
@@ -97,18 +100,15 @@ def iLearn_file_downloader(passed_in_ilearn_page, save_location, course_folder):
 
         if len(section['resources']) > 0:
             section_dir = os.path.join(save_folder, section['section'])
-            print(section_dir)
             if not os.path.exists(section_dir):
                 os.mkdir(section_dir)
 
             for content in section['resources']:
-                download_and_save(content, iLearn_page, section_dir)
-
-
-
-
-
-
+                if not content.hidden:
+                    download_and_save(content, iLearn_page, section_dir)
+                else:
+                    print("{} is hidden".format(content.resource_title))
+                    continue
 
 def download_and_save(content, iLearn_page, local_save_folder):
     if check_or_commit_resource(content.resource_title,
@@ -119,6 +119,7 @@ def download_and_save(content, iLearn_page, local_save_folder):
     else:
 
         resource_get = content()
+        print("THISISTHECONENT", content)
         section_dir_local = local_save_folder
         folder = None
         if resource_get['folder'] is not None:
@@ -129,9 +130,10 @@ def download_and_save(content, iLearn_page, local_save_folder):
                 os.mkdir(folder_path)
         if folder:
             section_dir_local = folder
+
         if resource_get['resource-type'] == 'file':
             try:
-                with open(os.path.join(section_dir_local, resource_get['title']), 'wb') as file:
+                with open(os.path.join(section_dir_local, scrub_filename(resource_get['title'])), 'wb') as file:
                     try:
                         file.write(resource_get['resource'].content)
                     except AttributeError:
@@ -140,7 +142,8 @@ def download_and_save(content, iLearn_page, local_save_folder):
             except FileNotFoundError:
                 short_title = resource_get['title'][5:]
                 short_dir = section_dir_local + short_title
-                with open(short_dir, 'wb') as file:
+
+                with open(scrub_filename(short_dir), 'wb') as file:
                     try:
                         file.write(resource_get['resource'].content)
                     except AttributeError:
@@ -152,22 +155,31 @@ def download_and_save(content, iLearn_page, local_save_folder):
         elif resource_get['resource-type'] == 'Other':
             url = resource_get['resource']
             create_url_shortcut(url, section_dir_local)
+
         elif resource_get['resource-type'] == 'video':
-            video_dir = section_dir_local + "videos/"
+            video_dir = os.path.join(section_dir_local, "Videos")
+
             if not os.path.exists(video_dir):
                 os.mkdir(video_dir)
             item_url = resource_get['resource']
             create_url_shortcut(item_url, video_dir)
 
         dr.log_file_download(content)
+
+
 def scrub_filename(filename):
     filename=filename
+
     char_to_remove = ['"', '*', ':', '<', '>', '?', '/', '\\', '~', '#', '%', '&', '{', '}', ':', ';']
     for char in filename:
         if char in char_to_remove:
+
             filename = filename.replace(char, '')
+
     return filename
+
 def create_url_shortcut(url, save_directory):
+    print("URL TO CLEAN", url)
     fixed_url = url.replace('/', '_')\
         .replace('.', ' ')\
         .replace(':','')\
@@ -177,7 +189,7 @@ def create_url_shortcut(url, save_directory):
         .replace('html','')\
         .replace('com','')
 
-    path = save_directory + fixed_url
+    path = os.path.join(save_directory,fixed_url)
     if len(path) > 254:
         path = path[0:254] + '.url'
     else:

@@ -10,7 +10,7 @@ class _IlearnCourseSection:
         self.section_id = section_id
         self.section_content = section_content
         self.section_summary = ifilter.get_section_summary(section_content)
-        self.raw_section_links = (self.section_id, ifilter.get_links(section_content))
+        self.raw_section_links = (self.section_id, ifilter.get_section_links(section_content))
         self.section_resources = ifilter.sort_for_content_links(self.raw_section_links)
         self.suspect_links = []
 
@@ -52,7 +52,7 @@ class IlearnCoursePage:
             ereserves_link = ifilter.construct_ereserves_request_link(eReserve_block)
             ereserves_page = BeautifulSoup(get_ereserves_page(ereserves_link), "html.parser")
             ereserves_main_content = ereserves_page.find('div', {'role':'main'})
-            ereserves_page_links = ifilter.get_links(ereserves_main_content)
+            ereserves_page_links = ifilter.get_section_links(ereserves_main_content)
             ereserve_content = ifilter.sort_for_content_links((None, ereserves_page_links))
             return ereserve_content
 

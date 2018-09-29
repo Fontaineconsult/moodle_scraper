@@ -1,5 +1,11 @@
-import logging
-logging.basicConfig(filename='test.log', level=logging.INFO, format='%(asctime)s: %(message)s')
+import logging,traceback, os
+
+try:
+    __log_path__ = os.path.join(os.path.dirname(__file__), "test.log")
+    logging.basicConfig(filename=__log_path__, level=logging.INFO, format='%(asctime)s: %(message)s')
+except:
+    print(traceback.print_exc())
+    input()
 
 searched_courses = []
 
@@ -32,15 +38,11 @@ def set_current_course_log(course_id, course_name):
         current_course_class = current_course(course_id, course_name)
 
 
-
 def test_report(report_info):
     logging.info("{} courses checked".format(str(len(report_info))))
 
 
-
-
 def log_resource_exists(resource):
-
     current_course_class.files_not_downloaded.append(resource)
 
 
@@ -66,6 +68,9 @@ def build_report():
     for each in reports:
 
         logging.info(each)
+
+    print("done logged it all")
+    return
 
 
 
