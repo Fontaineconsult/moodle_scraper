@@ -1,6 +1,7 @@
 import re, traceback
 import regexs
 import request_functions as rf
+import database as db
 from bs4 import BeautifulSoup
 import os, yaml
 import mimetypes
@@ -293,9 +294,19 @@ def get_assign_resource_page_link(link):
 def get_header(link):
     allowed_codes = [200, 300, 301, 302, 303]
     if link is not None:
+        have_visited_link = db.check_or_commit_link_visit(link)
+
+        if have_visited_link:
+            return have_visited_link  # returns old header
+
+
         header = rf.get_resources_header(link)
+
+
         if header is not None:
+            db.check_or_commit_link_visit(link, header)
             if header.status_code in allowed_codes:
+
                 return header
             else:
                 return None

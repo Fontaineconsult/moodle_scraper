@@ -1,8 +1,10 @@
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, VARCHAR, Text
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
+import pickle
 
+"""6967"""
 
 engine = create_engine("sqlite:///C:\\Users\\913678186\\Box\\SF State Python Projects\\iLearn Scraper Version 2\\database.db")
 Base = declarative_base()
@@ -18,6 +20,7 @@ class Course(Base):
     service_type = Column(String)
     course_folder_name = Column(String)
 
+
 class Resources(Base):
     __tablename__ = 'resources'
 
@@ -28,6 +31,20 @@ class Resources(Base):
     course_id = Column(String, ForeignKey('course.id'))
     date_added = Column(DateTime, default=datetime.utcnow)
     course = relationship(Course)
+
+
+
+class ResourceHead(Base):
+
+    __tablename__ = 'visited_links'
+
+    id = Column(Integer, primary_key=True)
+    resource_link = Column(String)
+    header_string = Column(VARCHAR)
+    date_added = Column(DateTime, default=datetime.utcnow)
+    status_code = Column(String)
+    error_received = Column(Text)
+
 
 
 Base.metadata.create_all(engine)
@@ -43,8 +60,6 @@ def update_course_title(course_id, title):
         course.course_title = title
         session.commit()
 
-
-
 def update_course_folder(course_id, course_name):
     course = session.query(Course).filter_by(course_id=course_id).first()
     if course:
@@ -52,6 +67,7 @@ def update_course_folder(course_id, course_name):
         session.commit()
     else:
         return "course not found"
+
 def get_single_course(course_id):
 
     course = session.query(Course).filter_by(course_id=course_id).first()
@@ -60,6 +76,7 @@ def get_single_course(course_id):
     else:
         print("No Course Found For ID: {}".format(course_id))
         return None
+
 def get_semester_amp_courses(semester):
 
     course_query = session.query(Course).filter_by(semester=semester, service_type='amp').all()
@@ -104,7 +121,6 @@ def add_course(page_id, semester, course_title, service_type):
             print("Course Already Exists")
             return False
 
-
 def check_or_commit_course(page_id, course_name):
     print(page_id)
     check_course = session.query(Course).filter_by(course_id=page_id).first()
@@ -121,6 +137,7 @@ def check_or_commit_course(page_id, course_name):
     else:
         commit_course(page_id,course_name)
         return False
+
 def check_or_commit_resource(name, link, type, course_id):
     check_resource = session.query(Resources).filter_by(resource_link=link, course_id=course_id).first()
 
@@ -131,6 +148,7 @@ def check_or_commit_resource(name, link, type, course_id):
         print("Returning False")
         commit_resource(name, link, type, course_id)
         return False
+
 def commit_course(course_id, course_name, course_folder_name, service_type):
     allowed_types = ['amp', 'cap']
 
@@ -145,6 +163,7 @@ def commit_course(course_id, course_name, course_folder_name, service_type):
         return True
     else:
         return False
+
 def commit_resource(name, link, type, course_id):
     resource = Resources(resource_name=name,
                          resource_link=link,
@@ -152,6 +171,7 @@ def commit_resource(name, link, type, course_id):
                          course_id=course_id)
     session.add(resource)
     session.commit()
+
 def flush_all_resources():
     try:
         delete_all = session.query(Resources).delete()
@@ -160,6 +180,7 @@ def flush_all_resources():
     except:
         print("There was a problem. Nothing deleted")
         session.rollback()
+
 def flush_all_courses():
     try:
         delete_all = session.query(Course).delete()
@@ -175,6 +196,7 @@ def get_add_date(link):
         return date_query.date_added
     else:
         return None
+
 def get_courses_resources(course_id):
     all_course_resources = session.query(Resources).filter_by(course_id=course_id).all()
     course_title = all_course_resources.course.course_title
@@ -186,4 +208,31 @@ def get_course_videos(course_id):
         return video_query
     else:
         return None
+
+def check_or_commit_link_visit(link, *header):
+
+
+    check_link = session.query(ResourceHead).filter_by(resource_link=link).first()
+
+    if len(header) == 0:
+        if check_link:
+            header = pickle.loads(check_link.header_string)
+            return header
+        else:
+            return False
+    else:
+
+
+        serialized_header = pickle.dumps(header[0])
+
+
+        link_visit_commit = ResourceHead(resource_link=link, header_string=serialized_header)
+        session.add(link_visit_commit)
+        session.commit()
+        return True
+
+
+
+
+
 

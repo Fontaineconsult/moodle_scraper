@@ -21,6 +21,7 @@ cap_courses = load_semester_cap_courses()
 
 
 if cap_courses is not None:
+
     for course_page in cap_courses:
 
         ilearn_page = IlearnCoursePage(course_page)
@@ -41,15 +42,17 @@ if cap_courses is not None:
 
             for resource in section:
                 if resource.service_type == 'captioning':
+                    section_dict['section_content'].append({'type': resource.resource_type,
+                                                            'link': resource.resource_link,
+                                                            'title': resource.resource_title,
+                                                            'scan_date': str(get_add_date(resource.resource_link))})
+                    print("ADDING")
+
+
 
                     if not check_or_commit_resource(resource.resource_title, resource.resource_link, resource.resource_type, course_page):
-
-                        section_dict['section_content'].append({'type': resource.resource_type,
-                                                           'link': resource.resource_link,
-                                                           'title': resource.resource_title,
-                                                           'scan_date': str(get_add_date(resource.resource_link))})
-                        print("ADDING")
-
+                            pass
+                            ##! disabled for now
                     else:
                         print("ALREADY GOT YO")
                         pass

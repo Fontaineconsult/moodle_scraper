@@ -59,11 +59,11 @@ first_level_mediasite_links = re.compile("https://ay1819.ilearn.support.at.sfsu.
 
 url_id = re.compile("[0-9]{5,7}")
 
-resource_type = re.compile("(.*..*.youtu[\.]?be.*..*.|.*.vimeo.*.|.*.mediasite.*.|.*.dailymotion.*.|.*.presidio.*.|.*.alexanderstreet.*.|.*./amara.org/en/videos/.*.|.*.fod.infobase.com.jpllnet.sfsu.edu.*.)|(.*.player.vimeo.com.*.)|"
+resource_type = re.compile("(.*..*.youtu[\.]?be.*..*.|.*.vimeo.*.|.*.mediasite.*.|.*.dailymotion.*.|.*.presidio.*.|.*.alexanderstreet.*.|.*./amara.org/en/videos/.*.|.*.fod.infobase.com.jpllnet.sfsu.edu.*.|.*.player.vimeo.com.*.|.*.www.ted.com/talks/.*.)|"
                            "(.*\.pdf|.*\.docx|.*\.ppt|.*\.doc|.*\.pptx|.*\.jpg|.*\.rtf|.*\.pages|.*\.rar|.*\.xlsx|.*\.zip|.*\.m4a|.*\.mov|.*\.mpg|.*\.mp4)", re.IGNORECASE)
 
 
-service_type = re.compile("(.*..*.youtu[\.]?be.*..*.|.*.vimeo.*.|.*.mediasite.*.|.*.dailymotion.*.|.*.presidio.*.|.*\.m4a|.*\.mov|.*\.mpg|.*\.mp4|.*.alexanderstreet.*.|.*./amara.org/en/videos/.*.|.*.fod.infobase.com.jpllnet.sfsu.edu.*.)|(.*.player.vimeo.com.*.)|"
+service_type = re.compile("(.*..*.youtu[\.]?be.*..*.|.*.vimeo.*.|.*.mediasite.*.|.*.dailymotion.*.|.*.presidio.*.|.*\.m4a|.*\.mov|.*\.mpg|.*\.mp4|.*.alexanderstreet.*.|.*./amara.org/en/videos/.*.|.*.fod.infobase.com.jpllnet.sfsu.edu.*.|.*.player.vimeo.com.*.|.*.www.ted.com/talks/.*.)|"
                           "(.*\.pdf|.*\.docx|.*\.ppt|.*\.doc|.*\.pptx|.*\.jpg|.*\.rtf|.*\.pages|.*\.rar|.*\.xlsx|.*\.zip)", re.IGNORECASE)
 
 is_moodle_file = re.compile(".*.mod_resource|.*.mod_folder", re.IGNORECASE)

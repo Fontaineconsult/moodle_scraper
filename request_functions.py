@@ -55,7 +55,7 @@ def open_iLearn_connection():
         ilearn_session = None
         return False
 
-
+"""
 def open_sfstate_global_login():
     global global_login_session
 
@@ -90,7 +90,7 @@ def open_sfstate_global_login():
         print("something wrong2")
         global_login_session = None
 
-
+"""
 
 
 def iLearn_login_session(calling_function):

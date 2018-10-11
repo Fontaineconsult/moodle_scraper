@@ -170,7 +170,7 @@ def download_and_save(content, iLearn_page, local_save_folder):
 def scrub_filename(filename):
     filename=filename
 
-    char_to_remove = ['"', '*', ':', '<', '>', '?', '/', '\\', '~', '#', '%', '&', '{', '}', ':', ';']
+    char_to_remove = ['"', '*', ':', '<', '>', '?', '/', '~', '#', '%', '&', '{', '}', ':', ';']
     for char in filename:
         if char in char_to_remove:
 
