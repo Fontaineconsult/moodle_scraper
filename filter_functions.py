@@ -1,4 +1,4 @@
-import re, traceback
+import re
 import regexs
 import request_functions as rf
 import database as db
@@ -232,8 +232,6 @@ def get_mod_resource_page_link(link):
     mod_url_page_html = rf.get_ilearn_resource(link)
     div_main = BeautifulSoup(mod_url_page_html, "lxml").find("div", {"role": "main"})
 
-
-
     if div_main is not None:
 
 
@@ -294,17 +292,13 @@ def get_assign_resource_page_link(link):
 def get_header(link):
     allowed_codes = [200, 300, 301, 302, 303]
     if link is not None:
-        have_visited_link = db.check_or_commit_link_visit(link)
-
-        if have_visited_link:
-            return have_visited_link  # returns old header
-
 
         header = rf.get_resources_header(link)
 
 
         if header is not None:
-            db.check_or_commit_link_visit(link, header)
+            print(link, header.headers, header.status_code)
+            db.check_link_visit(link, header)
             if header.status_code in allowed_codes:
 
                 return header
@@ -352,7 +346,11 @@ def link_buffer(link):
             return False
 
 
-def initial_resource_search(header, link):
+def initial_resource_search(link):
+    check_link = db.check_link_visit(link)
+
+    header = get_header(link)
+
     if header is not None:
         if header.status_code == 303 or header.status_code == 302 or header.status_code == 301:
 
@@ -365,8 +363,6 @@ def initial_resource_search(header, link):
                     return link, 200, link_type
                 else:
                     return None
-
-
             bad_characters = ['#', '/']
             if header_resource[-1] in bad_characters: # some sites return the same link in the Location area. This causes an infinite loop
                 if header_resource[:-1] == link:
@@ -439,7 +435,7 @@ def master_link_sorter(section_links):
 
             if regexs.check_valid_url(resource_url):
 
-                search = initial_resource_search(get_header(resource_url), resource_url)
+                search = initial_resource_search(resource_url)
 
                 if search is not None:
 

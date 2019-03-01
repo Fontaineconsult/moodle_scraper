@@ -47,7 +47,7 @@ class IlearnCoursePage:
         return section_dict
 
     def check_eReserves(self):
-        eReserve_block =  self.parsed_html.find('aside', {'data-block': 'ereserves'})
+        eReserve_block = self.parsed_html.find('aside', {'data-block': 'ereserves'})
         if eReserve_block:
             ereserves_link = ifilter.construct_ereserves_request_link(eReserve_block)
             ereserves_page = BeautifulSoup(get_ereserves_page(ereserves_link), "html.parser")

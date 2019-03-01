@@ -1,5 +1,4 @@
 import requests
-from requests.auth import HTTPBasicAuth
 import requests.exceptions
 import urllib3
 import urllib3.exceptions
@@ -108,8 +107,7 @@ def iLearn_login_session(calling_function):
 def get_resources_header(resource_url, *session):
     session = session[0]
     try:
-        header = session.head(resource_url, verify=False)
-        print(header.headers, resource_url)
+        header = session.head(resource_url, verify=False, timeout=10)
         return header
     except (requests.exceptions.SSLError,
             requests.exceptions.ConnectionError,

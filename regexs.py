@@ -15,10 +15,10 @@ folders_group = "((resource/view.php\?id=[0-9]{0,7})" \
 
 
 # direct download links on main iLearn page. mod resource can be folder
-first_level_resource_links = re.compile(r"(https://ay1819.ilearn.support.at.sfsu.edu/mod/)" + first_level_group)
+first_level_resource_links = re.compile(r"(https://ilearn.support.at.sfsu.edu/ay1819/mod/)" + first_level_group)
 
 # links to another page with a download link
-first_level_url_links = re.compile(r"(https://ay1819.ilearn.support.at.sfsu.edu/mod/)" + url_links_group)
+first_level_url_links = re.compile(r"(https://ilearn.support.at.sfsu.edu/ay1819/mod/)" + url_links_group)
 
 direct_external_links = re.compile("https://www.youtube.com/watch\?v=.{11}|"
                                    "https://www.dailymotion.com/video/.{7}")
@@ -26,11 +26,11 @@ direct_external_links = re.compile("https://www.youtube.com/watch\?v=.{11}|"
 
 #links to folders with multiple downloads.
 
-folder_links = re.compile(r"(https://ay1819.ilearn.support.at.sfsu.edu/mod/)" + folders_group)
+folder_links = re.compile(r"(https://ilearn.support.at.sfsu.edu/ay1819/mod/)" + folders_group)
 
 
 
-links_to_remove = re.compile("(https://ay1819.ilearn.support.at.sfsu.edu/mod/)("
+links_to_remove = re.compile("(https://ilearn.support.at.sfsu.edu/ay1819/mod/)("
                              "(turnitintooltwo/.+)|"
                              "(attendance/.+)|"
                              "(forum/.+)|"
@@ -39,8 +39,8 @@ links_to_remove = re.compile("(https://ay1819.ilearn.support.at.sfsu.edu/mod/)("
                              "(zoom/:.+))|"
                              "(mailto:.+)|"
                              "(https://email.sfsu.edu/owa/.+)|"
-                             "(https://ay1819.ilearn.support.at.sfsu.edu/course/view.php\?id=\d{0,7}#section-\d+)|"
-                             "(https://ay1819.ilearn.support.at.sfsu.edu/course/view.php?id=[0-9]{0,7})|"
+                             "(https://ilearn.support.at.sfsu.edu/ay1819/course/view.php\?id=\d{0,7}#section-\d+)|"
+                             "(https://ilearn.support.at.sfsu.edu/ay1819/course/view.php?id=[0-9]{0,7})|"
                              "(\A#{1}.+)|"
                              "(https://ilearn.sfsu.edu/.+)")
 
@@ -49,12 +49,12 @@ links_to_remove = re.compile("(https://ay1819.ilearn.support.at.sfsu.edu/mod/)("
 
 
 
-moodle_content_id_regex = "https://ay1819.ilearn.support.at.sfsu.edu/mod/(((url|presidioresource|mediasite)|" \
+moodle_content_id_regex = "https://ilearn.support.at.sfsu.edu/ay1819/mod/(((url|presidioresource|mediasite)|" \
                           "(page)|(assign)|(folder)|(resource))/view.php\?id=[0-9]{0,7})|" \
                           "(.*\.pdf|.*\.docx|.*\.ppt|.*\.doc|.*\.pptx|.*\.jpg|.*\.rtf|.*\.m4a|.*\.pages|.*\.rar|.*\.xlsx|.*\.zip)|" \
                           "(https://diva.sfsu.edu/bundles/[0-9]{5,8}/download)"
 
-first_level_mediasite_links = re.compile("https://ay1819.ilearn.support.at.sfsu.edu/mod/mediasite/view.php\?id=.+")
+first_level_mediasite_links = re.compile("https://ilearn.support.at.sfsu.edu/ay1819/mod/mediasite/view.php\?id=.+")
 
 
 url_id = re.compile("[0-9]{5,7}")
